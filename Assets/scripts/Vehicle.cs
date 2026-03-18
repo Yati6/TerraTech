@@ -31,30 +31,29 @@ public class Vehicle {
 
 
     public void AddBlock(Block block, Vector3Int placePos) {
+        // CRITICAL: Update the block's internal position before calculating its cells
         block.gridPosition = placePos;
 
         blocks.Add(block);
 
-        // Now GetCells() will use the correct gridPosition internally
+        // This now uses the updated gridPosition to fill the dictionary
         foreach (var cell in block.GetCells()) {
             grid[cell] = block;
         }
     }
 
     public static Vector3Int calculatePlacePosition(Block blockToPlace, ConnectionFace myFace, Block targetBlock, ConnectionFace targetFace) {
-        // 1. Get the rotated version of the face on the block we are holding
+        // 1. Get the actual face positions/directions based on current rotations
         ConnectionFace rotatedMyFace = blockToPlace.GetRotatedFace(myFace, blockToPlace.rotation);
-
-        // 2. Get the rotated version of the face on the block already on the vehicle
         ConnectionFace rotatedTargetFace = targetBlock.GetRotatedFace(targetFace, targetBlock.rotation);
 
-        // 3. Find the world cell where the target face sits
+        // 2. Find the world cell where the target face is located
         Vector3Int targetFaceWorldCell = targetBlock.gridPosition + rotatedTargetFace.localCell;
 
-        // 4. Step OUT from that cell in the direction the target face is pointing
+        // 3. Move one step out in the direction the target face is pointing
         Vector3Int newFaceWorldCell = targetFaceWorldCell + rotatedTargetFace.direction;
 
-        // 5. Subtract the rotated local position of our new block's face
+        // 4. Subtract the rotated local position of our new block's face to find the pivot
         Vector3Int basePos = newFaceWorldCell - rotatedMyFace.localCell;
 
         return basePos;
